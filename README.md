@@ -3,7 +3,8 @@ Watchdog for Danila miner
 
 Скачать : https://github.com/EvgeniyKorepov/Watchdog4DanilaMiner/releases/latest/download/Watchdog4DanilaMiner.7z
 
-Задонатить Ton можно сюда EQAIxel94QQBAiArH5taFYL0Lwntnhk79-AmcA23BvQsFUtc
+Watchdog ничего не майнит разработчику, не берет никакие проценты. 
+Отблагодарить создателя вы можете задонатив Ton на адрес EQAIxel94QQBAiArH5taFYL0Lwntnhk79-AmcA23BvQsFUtc
 
 Watchdog запускает danila-miner.exe с параметрами заданными в конфиг-файле, анализирует вывод майнера, перезапускает майнер при нахождении ключевых слов.
 Дополнительно считает средний хешрейт (среднее арифметическое последних 50 показаний майнера) и количество шар.
