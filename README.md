@@ -33,7 +33,10 @@ Watchdog запускает danila-miner.exe с параметрами зада�
 
   // Ключевые слова инициирующие перезапуск майнера с сменой пула
 	"PoolChangeTags" : [
-		"Connection error. Check pool address."
+		"Connection error. Check pool address.",
+		"Max retries exceeded with url",
+		"Connection aborted",
+		"Unknown error"
 	]
 
 }
