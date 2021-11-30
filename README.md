@@ -40,3 +40,6 @@ Watchdog запускает danila-miner.exe с параметрами зада�
 Без парамеров Watchdog4DanilaMiner.exe использует конфиг Watchdog4DanilaMiner.json из той же папки откуда запускается.
 В параметре можно прописать путь к произвольному файлу конфига, например:
 `Watchdog4DanilaMiner.exe C:\Mining\Ton_danila-miner\Watchdog4DanilaMiner\Watchdog4DanilaMiner3090.json`
+
+![image](https://user-images.githubusercontent.com/35364901/144058493-49980455-3f06-40ee-b748-74b282f935a6.png)
+
