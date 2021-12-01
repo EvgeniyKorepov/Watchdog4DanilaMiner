@@ -30,6 +30,7 @@ type
     HashrateAverage : Double;
     HashrateList : THashrateList;
     HashFoundCount : Integer;
+    LogFileName : String;
   end;
 
   function ConfigLoad(out AConfigFilePath : String) : Boolean;
@@ -119,12 +120,13 @@ begin
 end;
 
 procedure StartMiner(CommandLine : String; AWorkDir : String);
+const ConstBufferLength = 1024;
 var
   ASecurityAttributes : TSecurityAttributes;
   AStartupInfo : TStartupInfo;
   StdOutPipeRead, StdOutPipeWrite : THandle;
   WasReadOK : Boolean;
-  Buffer : array[0..255] of AnsiChar;
+  Buffer : array[0..ConstBufferLength] of AnsiChar;
   BytesRead : Cardinal;
   WorkDir : string;
   Handle : Boolean;
@@ -168,7 +170,7 @@ begin
     if Handle then
       try
         repeat
-          WasReadOK := ReadFile(StdOutPipeRead, Buffer, 255, BytesRead, nil);
+          WasReadOK := ReadFile(StdOutPipeRead, Buffer, ConstBufferLength, BytesRead, nil);
           if BytesRead > 0 then
           begin
             Buffer[BytesRead] := #0;
@@ -194,7 +196,6 @@ begin
               Exit;
             end;
           end;
-          Sleep(100);
         until not WasReadOK or (BytesRead = 0);
         StopMiner();
         WaitForSingleObject(FProcessInformation.hProcess, INFINITE);
@@ -327,6 +328,14 @@ begin
       exit;
     end;
 
+    if not AJSON.TryGetValue('LogFileName', FSettings.LogFileName) then
+    begin
+      LogConsole('ERROR read value LogFileName');
+      exit;
+    end;
+
+
+
     if not AJSON.TryGetValue('MinerParams', FSettings.MinerParams) then
     begin
       LogConsole('ERROR read value MinerParams');
@@ -365,10 +374,24 @@ end;
 
 procedure LogConsole(const AMessage : String);
 var ALogPath : String;
+    LMessage : String;
 begin
-  Writeln(AMessage);
+  try
+    LMessage := AMessage.Trim;
+  except
+  end;
+  Writeln(LMessage);
 
-  ALogPath := TPath.ChangeExtension(ParamStr(0), '.log');
+  if FSettings.LogFileName.IsEmpty then
+    FSettings.LogFileName := TPath.ChangeExtension(ParamStr(0), '.log');
+
+  if TPath.GetDirectoryName(FSettings.LogFileName) = '' then
+    ALogPath := TPath.Combine(TPath.GetDirectoryName(ParamStr(0)), FSettings.LogFileName)
+  else
+    ALogPath := FSettings.LogFileName;
+  if TPath.GetExtension(ALogPath) = '' then
+    ALogPath := ALogPath + '.log';
+
   ALogPath :=
     IncludeTrailingPathDelimiter( TPath.GetDirectoryName(ALogPath)) +
     TPath.GetFileNameWithoutExtension(ALogPath) +
@@ -376,16 +399,24 @@ begin
     FormatDateTime(ConstRotateFileMask, Now()) +
     TPath.GetExtension(ALogPath);
 
-  TFile.AppendAllText(ALogPath, AMessage.Trim + #10);
+  try
+    TFile.AppendAllText(ALogPath, LMessage + #10);
+  except
+  end;
 end;
 
 procedure LogConsoleWatchdog(const AMessage : String);
 var ADateTimeString : String;
+    LMessage : String;
 begin
+  try
+    LMessage := AMessage.Trim;
+  except
+  end;
   ADateTimeString := FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now());
-  LogConsole(ADateTimeString + ' ' + StringOfChar('*', AMessage.Length + 2));
-  LogConsole(ADateTimeString + '  ' + AMessage);
-  LogConsole(ADateTimeString + ' ' + StringOfChar('*', AMessage.Length + 2));
+  LogConsole(ADateTimeString + ' ' + StringOfChar('*', LMessage.Length + 2));
+  LogConsole(ADateTimeString + '  ' + LMessage);
+  LogConsole(ADateTimeString + ' ' + StringOfChar('*', LMessage.Length + 2));
 end;
 
 function Handler(dwCtrlType: DWORD): Boolean; stdcall;
@@ -394,7 +425,6 @@ begin
   case dwCtrlType of
     CTRL_C_EVENT, CTRL_BREAK_EVENT :
     begin
-//      Application.Terminate;
       StopMiner();
       Halt;
       Result := True;
@@ -450,7 +480,5 @@ end;
 initialization
 
 finalization
-
-//  GenerateConsoleCtrlEvent(CTRL_C_EVENT, 0);
 
 end.
