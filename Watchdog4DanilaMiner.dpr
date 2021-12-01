@@ -26,7 +26,7 @@ begin
         Readln;
         exit;
       end;
-      LogConsole('Wacthdog donate EQAIxel94QQBAiArH5taFYL0Lwntnhk79-AmcA23BvQsFUtc');
+      LogConsole(GetBuildInfoAsString + ' , donate EQAIxel94QQBAiArH5taFYL0Lwntnhk79-AmcA23BvQsFUtc');
       SetConsoleTitle(PChar(GetBuildInfoAsString  + ' use config ' + AConfigFilePath));
       AWorkDir := TPath.GetDirectoryName(FSettings.MinerFilePath);
       repeat
