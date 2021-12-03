@@ -19,6 +19,8 @@ begin
     FSettings.HashFoundCount := 0;
     FFormatSettings := TFormatSettings.Create;
     FQuele := TThreadedQueue<String>.Create(10, 100, 100);
+    FQueleBalance := TThreadedQueue<Double>.Create(10, 100, 100);;
+    FBalance := 0;
     try
       SetConsoleCtrlHandler(@Handler, True);
       if not ConfigLoad(AConfigFilePath) then
@@ -27,6 +29,7 @@ begin
         Readln;
         exit;
       end;
+      StartGetBalanceThread(FSettings.WalletAddress);
       LogConsole(GetBuildInfoAsString + ' , donate EQAIxel94QQBAiArH5taFYL0Lwntnhk79-AmcA23BvQsFUtc');
       SetConsoleTitle(PChar(GetBuildInfoAsString  + ' use config ' + AConfigFilePath));
       AWorkDir := TPath.GetDirectoryName(FSettings.MinerFilePath);
@@ -42,5 +45,6 @@ begin
     StopMiner;
     FreeAndNil(FSettings.HashrateList);
     FreeAndNil(FQuele);
+    FreeAndNil(FQueleBalance);
   end;
 end.
