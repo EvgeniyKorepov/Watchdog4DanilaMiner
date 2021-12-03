@@ -6,17 +6,29 @@ uses
   System.SysUtils,
   System.Generics.Collections,
   System.IOUtils,
+  System.Classes,
   Winapi.Windows,
+  System.Threading,
+  System.DateUtils,
+  System.SyncObjs,
   TLHelp32,
   System.JSON;
 
 const
   ConstRotateFileMask = 'yyyy.mm.dd';
   ConstHashrateListCount = 50;
+  ConstReadTimeoutSec = 30;
 
 type
 
   TParsedValue = (None, HashrateAverage, HashFoundCount);
+  TRestartTag = record
+    Tag : String;
+    RepeatCount : Integer;
+    RepeatCountMax : Integer;
+  end;
+  TRestartTags = TArray<TRestartTag>;
+
 
   THashrateList = TList<Double>;
   TSettings = record
@@ -25,7 +37,7 @@ type
     PoolID : Integer;
     PoolUrls : TArray<String>;
     MinerParams : String;
-    RestartTags : TArray<String>;
+    RestartTags : TRestartTags;
     PoolChangeTags : TArray<String>;
     HashrateAverage : Double;
     HashrateList : THashrateList;
@@ -45,31 +57,41 @@ var
   FSettings : TSettings;
   FProcessInformation: TProcessInformation;
   FFormatSettings : TFormatSettings;
+  FQuele : TThreadedQueue<String>;
+  FTask : ITask;
 
 implementation
 
-function StrOemToString(const aStr : AnsiString) : String;
-var Len : Integer;
-    AAnsiString : AnsiString;
+function StrOemToString(const aStr : AnsiString; const ALength : Integer) : String;
+var AAnsiString : AnsiString;
 begin
-  Len := Length(aStr);
-  SetLength(AAnsiString, Len);
-  OemToCharBuffA(PAnsiChar(aStr), PAnsiChar(AAnsiString), Len);
+  SetLength(AAnsiString, ALength);
+  OemToCharBuffA(PAnsiChar(aStr), PAnsiChar(AAnsiString), ALength);
   Result := String(AAnsiString);
 end;
 
 function CheckTags(AContent : String) : boolean;
 var I : Integer;
+    ARestartTag : Boolean;
 begin
   Result := False;
-
+  ARestartTag := False;
   AContent := AContent.ToLower;
   for I := Low(FSettings.RestartTags) to High(FSettings.RestartTags) do
-    if AContent.Contains(FSettings.RestartTags[I]) then
+    if AContent.Contains(FSettings.RestartTags[I].Tag) then
     begin
-      Result := True;
+      ARestartTag := True;
+      Inc(FSettings.RestartTags[I].RepeatCount);
+      if FSettings.RestartTags[I].RepeatCount >= FSettings.RestartTags[I].RepeatCountMax then
+      begin
+        FSettings.RestartTags[I].RepeatCount := 0;
+        Result := True;
+      end;
       break;
     end;
+  if not ARestartTag then
+    for I := Low(FSettings.RestartTags) to High(FSettings.RestartTags) do
+      FSettings.RestartTags[I].RepeatCount := 0;
 
   for I := Low(FSettings.PoolChangeTags) to High(FSettings.PoolChangeTags) do
     if AContent.Contains(FSettings.PoolChangeTags[I]) then
@@ -133,9 +155,13 @@ var
   AOutputLine : String;
   AStopCounter : Integer;
   AParsedValue : TParsedValue;
+  ATimeLastRead : TDateTime;
+  AReadTimeoutSec : Int64;
 begin
-  LogConsoleWatchdog('Start danila miner, use pool ' + FSettings.PoolUrls[FSettings.PoolID]);
+  LogConsoleWatchdog('Start ' + TPath.GetFileName(FSettings.MinerFilePath) + ' use pool ' + FSettings.PoolUrls[FSettings.PoolID]);
   FSettings.HashrateList.Clear;
+  while FQuele.PopItem(AOutputLine) = TWaitResult.wrSignaled do ;
+  AOutputLine := '';
   with ASecurityAttributes do begin
     nLength := SizeOf(ASecurityAttributes);
     bInheritHandle := True;
@@ -148,7 +174,7 @@ begin
       FillChar(AStartupInfo, SizeOf(AStartupInfo), 0);
       cb := SizeOf(AStartupInfo);
       dwFlags := STARTF_USESHOWWINDOW or STARTF_USESTDHANDLES or SW_HIDE;
-      hStdInput := GetStdHandle(STD_INPUT_HANDLE); // don't redirect stdin
+      hStdInput := GetStdHandle(STD_INPUT_HANDLE);
       hStdOutput := StdOutPipeWrite;
       hStdError := StdOutPipeWrite;
     end;
@@ -168,14 +194,43 @@ begin
     CloseHandle(StdOutPipeWrite);
     AStopCounter := -1;
     if Handle then
+    begin
+
+      FTask := TTask.Run(
+        procedure
+        var AAQuele : TThreadedQueue<String>;
+            AAOutputLine : String;
+            AABytesRead : Cardinal;
+            AAStdOutPipeRead : THandle;
+            AABuffer : array[0..ConstBufferLength] of AnsiChar;
+        begin
+          AAQuele := FQuele;
+          AAStdOutPipeRead := StdOutPipeRead;
+          repeat
+            try
+              WasReadOK := ReadFile(AAStdOutPipeRead, AABuffer, ConstBufferLength, AABytesRead, nil);
+              if AABytesRead > 0 then
+              begin
+                Buffer[BytesRead] := #0;
+                AAOutputLine := StrOemToString(AABuffer, AABytesRead);
+                AAQuele.PushItem(AAOutputLine);
+              end;
+            except
+              break;
+            end;
+          until FTask.Status = TTaskStatus.Canceled;
+        end
+      );
+
       try
+        ATimeLastRead := Now();
         repeat
-          WasReadOK := ReadFile(StdOutPipeRead, Buffer, ConstBufferLength, BytesRead, nil);
-          if BytesRead > 0 then
+          if FQuele.PopItem(AOutputLine) = TWaitResult.wrSignaled then
           begin
-            Buffer[BytesRead] := #0;
-            AOutputLine := StrOemToString(Buffer);
+            ATimeLastRead := Now();
+
             ParseOutput(AOutputLine, AParsedValue);
+
             AOutputLine := AOutputLine.Trim;
             case AParsedValue of
               TParsedValue.HashrateAverage :
@@ -196,15 +251,24 @@ begin
               Exit;
             end;
           end;
-        until not WasReadOK or (BytesRead = 0);
+          AReadTimeoutSec := SecondsBetween(ATimeLastRead, Now());
+          if AReadTimeoutSec > ConstReadTimeoutSec then
+          begin
+            LogConsoleWatchdog('Miner output read timeout ' + AReadTimeoutSec.ToString + ' sec');
+            break;
+          end;
+        until (FTask.Status = TTaskStatus.Canceled);
         StopMiner();
         WaitForSingleObject(FProcessInformation.hProcess, INFINITE);
       finally
         CloseHandle(FProcessInformation.hThread);
         CloseHandle(FProcessInformation.hProcess);
       end;
+    end;
   finally
     CloseHandle(StdOutPipeRead);
+    if Assigned(FTask) then
+      FTask.Cancel;
   end;
 end;
 
@@ -279,6 +343,7 @@ function ConfigLoad(out AConfigFilePath : String) : Boolean;
 var AConfigContent : String;
     AJSON : TJSONObject;
     I : Integer;
+    AStringArray : TArray<String>;
 begin
   Result := False;
 
@@ -348,7 +413,7 @@ begin
       exit;
     end;
 
-    if not AJSON.TryGetValue('RestartTags', FSettings.RestartTags) then
+    if not AJSON.TryGetValue('RestartTags', AStringArray) then
     begin
       LogConsole('ERROR read value RestartTags');
       exit;
@@ -360,8 +425,17 @@ begin
       exit;
     end;
 
-    for I := Low(FSettings.RestartTags) to High(FSettings.RestartTags) do
-      FSettings.RestartTags[I] := FSettings.RestartTags[I].ToLower;
+    SetLength(FSettings.RestartTags, Length(AStringArray));
+    for I := Low(AStringArray) to High(AStringArray) do
+    begin
+      FSettings.RestartTags[I].Tag := AStringArray[I].ToLower;
+      FSettings.RestartTags[I].RepeatCount := 0;
+      if AStringArray[I].ToLower.Equals('hashrate 0.0') then
+        FSettings.RestartTags[I].RepeatCountMax := 3
+      else
+        FSettings.RestartTags[I].RepeatCountMax := 1;
+    end;
+
     for I := Low(FSettings.PoolChangeTags) to High(FSettings.PoolChangeTags) do
       FSettings.PoolChangeTags[I] := FSettings.PoolChangeTags[I].ToLower;
     FSettings.PoolID := 0;
@@ -400,7 +474,7 @@ begin
     TPath.GetExtension(ALogPath);
 
   try
-    TFile.AppendAllText(ALogPath, LMessage + #10);
+    TFile.AppendAllText(ALogPath, LMessage + #10, TEncoding.UTF8);
   except
   end;
 end;
