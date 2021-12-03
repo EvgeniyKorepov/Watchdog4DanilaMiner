@@ -19,8 +19,12 @@ Watchdog запускает danila-miner.exe с параметрами зада�
   // Адрес вашего кошелька
 	"WalletAddress" : "EQAIxel94QQBAiArH5taFYL0Lwntnhk79-AmcA23BvQsFUtc",
 
+  // Путь к логфайлу (если запускате несколько экземпляров, то лучше каждому свой лог)
+	"LogFileName" : "Watchdog4DanilaMiner.log",	
+
   // Список пулов
 	"PoolUrls" : [
+		"https://server1.whalestonpool.com",	
 		"https://pool.services.tonwhales.com",
 		"https://ton-pool-server-p3agi.ondigitalocean.app"
 	],
