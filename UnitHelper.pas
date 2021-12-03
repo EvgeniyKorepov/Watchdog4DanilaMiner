@@ -11,6 +11,7 @@ uses
   System.Threading,
   System.DateUtils,
   System.SyncObjs,
+  System.Net.HttpClient,
   TLHelp32,
   System.JSON;
 
@@ -52,13 +53,18 @@ type
   procedure LogConsoleWatchdog(const AMessage : String);
   function Handler(dwCtrlType: DWORD): Boolean; stdcall;
   function GetBuildInfoAsString : string;
+  procedure StartGetBalanceThread(const AWalletAddress : String);
+  function GetBalance() : String;
 
 var
   FSettings : TSettings;
   FProcessInformation: TProcessInformation;
   FFormatSettings : TFormatSettings;
   FQuele : TThreadedQueue<String>;
+  FQueleBalance : TThreadedQueue<Double>;
   FTask : ITask;
+  FTaskBalance : ITask;
+  FBalance : Double;
 
 implementation
 
@@ -147,9 +153,6 @@ var
   ASecurityAttributes : TSecurityAttributes;
   AStartupInfo : TStartupInfo;
   StdOutPipeRead, StdOutPipeWrite : THandle;
-  WasReadOK : Boolean;
-  Buffer : array[0..ConstBufferLength] of AnsiChar;
-  BytesRead : Cardinal;
   WorkDir : string;
   Handle : Boolean;
   AOutputLine : String;
@@ -199,6 +202,7 @@ begin
       FTask := TTask.Run(
         procedure
         var AAQuele : TThreadedQueue<String>;
+            AAWasReadOK : Boolean;
             AAOutputLine : String;
             AABytesRead : Cardinal;
             AAStdOutPipeRead : THandle;
@@ -208,10 +212,10 @@ begin
           AAStdOutPipeRead := StdOutPipeRead;
           repeat
             try
-              WasReadOK := ReadFile(AAStdOutPipeRead, AABuffer, ConstBufferLength, AABytesRead, nil);
-              if AABytesRead > 0 then
+              AAWasReadOK := ReadFile(AAStdOutPipeRead, AABuffer, ConstBufferLength, AABytesRead, nil);
+              if (AABytesRead > 0) and AAWasReadOK then
               begin
-                Buffer[BytesRead] := #0;
+                AABuffer[AABytesRead] := #0;
                 AAOutputLine := StrOemToString(AABuffer, AABytesRead);
                 AAQuele.PushItem(AAOutputLine);
               end;
@@ -234,7 +238,7 @@ begin
             AOutputLine := AOutputLine.Trim;
             case AParsedValue of
               TParsedValue.HashrateAverage :
-                AOutputLine := AOutputLine + ' | Watchdog: Average hashrate ' + FSettings.HashrateAverage.ToString(TFloatFormat.ffFixed, 15, 2) + ' Mhash/s';
+                AOutputLine := AOutputLine + ' | Watchdog: Average hashrate ' + FSettings.HashrateAverage.ToString(TFloatFormat.ffFixed, 15, 2) + ' Mhash/s' + ' | ' + GetBalance();
               TParsedValue.HashFoundCount :
                 AOutputLine := AOutputLine + ' | Watchdog: All found count ' + FSettings.HashFoundCount.ToString;
             end;
@@ -550,6 +554,66 @@ begin
     IntToStr(V3) + '.' + IntToStr(V4);
 end;
 
+
+procedure StartGetBalanceThread(const AWalletAddress : String);
+begin
+    FTaskBalance := TTask.Run(
+        procedure
+        var AQuery : String;
+            AQueleBalance : TThreadedQueue<Double>;
+            AHTTPClient : THTTPClient;
+            AHTTPResponse : IHTTPResponse;
+            AJSON : TJSONObject;
+            ABalance : Double;
+        begin
+          AQuery := 'https://server1.whalestonpool.com/wallet/' + AWalletAddress;
+          AQueleBalance := FQueleBalance;
+          AHTTPClient := THTTPClient.Create;
+          try
+          repeat
+            try
+              AHTTPResponse := AHTTPClient.Get(AQuery);
+              if Assigned(AHTTPResponse) then
+                if AHTTPResponse.StatusCode = 200 then
+                begin
+                  AJSON := TJSONObject.ParseJSONValue(AHTTPResponse.ContentAsString()) as TJSONObject;
+                  if Assigned(AJSON) then
+                    if AJSON.TryGetValue('balance', ABalance) then
+                      AQueleBalance.PushItem(ABalance / 1000000000);
+                end;
+              TThread.Sleep(30000);
+            except
+            end;
+          until FTaskBalance.Status = TTaskStatus.Canceled;
+          finally
+            FreeAndNil(AHTTPClient);
+          end;
+        end
+      );
+end;
+
+function GetBalance() : String;
+var ABalance : Double;
+    ABalanceDelta : Double;
+    ABalanceDeltaText : String;
+begin
+  ABalance := 0;
+  Result := 'Balance ';
+  ABalanceDeltaText := '';
+  if FQueleBalance.PopItem(ABalance) = TWaitResult.wrSignaled then
+  begin
+    if (FBalance <> 0) and (FBalance <> ABalance) then
+    begin
+      ABalanceDelta := ABalance - FBalance;
+      ABalanceDeltaText := ' (';
+      if ABalanceDelta > 0 then
+        ABalanceDeltaText := ABalanceDeltaText + '+';
+      ABalanceDeltaText := ABalanceDeltaText + ABalanceDelta.ToString(TFloatFormat.ffFixed, 15, 8) + ')';
+    end;
+    FBalance := ABalance;
+  end;
+  Result := Result + FBalance.ToString(TFloatFormat.ffFixed, 15, 8) + ABalanceDeltaText;
+end;
 
 initialization
 
