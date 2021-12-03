@@ -18,6 +18,7 @@ begin
     FSettings.HashrateList := THashrateList.Create;
     FSettings.HashFoundCount := 0;
     FFormatSettings := TFormatSettings.Create;
+    FQuele := TThreadedQueue<String>.Create(10, 100, 100);
     try
       SetConsoleCtrlHandler(@Handler, True);
       if not ConfigLoad(AConfigFilePath) then
@@ -40,5 +41,6 @@ begin
   finally
     StopMiner;
     FreeAndNil(FSettings.HashrateList);
+    FreeAndNil(FQuele);
   end;
 end.
