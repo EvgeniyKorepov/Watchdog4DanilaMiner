@@ -1,0 +1,27 @@
+{
+
+	"MinerFilePath" : "C:\Mining\Ton_danila-miner\danila-miner.exe",
+	"MinerParams" : "",
+	"WalletAddress" : "EQAIxel94QQBAiArH5taFYL0Lwntnhk79-AmcA23BvQsFUtc",
+
+	"LogFileName" : "Watchdog4DanilaMiner.log",
+
+	"PoolUrls" : [
+		"https://server1.whalestonpool.com",
+		"https://pool.services.tonwhales.com",
+		"https://ton-pool-server-p3agi.ondigitalocean.app"
+	],
+
+	"RestartTags" : [
+		"error",
+		"hashrate 0.0"
+	],
+
+	"PoolChangeTags" : [
+		"Connection error. Check pool address.",
+		"Max retries exceeded with url",
+		"Connection aborted",
+		"Unknown error"
+	]
+
+}
