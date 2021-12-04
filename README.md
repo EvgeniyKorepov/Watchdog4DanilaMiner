@@ -3,11 +3,11 @@ Watchdog for Danila miner
 
 Скачать : https://github.com/EvgeniyKorepov/Watchdog4DanilaMiner/releases/latest/download/Watchdog4DanilaMiner.7z
 
-# Запуск:
+## Запуск:
 1. В файле Watchdog4DanilaMiner.json укажите полный путь к файлу danila-miner.exe и свой кошелек
 2. Запустите Watchdog4DanilaMiner.exe
 
-# Описание:
+## Описание:
 
 Watchdog ничего не майнит разработчику, не берет никакие проценты. 
 Отблагодарить создателя вы можете задонатив Ton на адрес EQAIxel94QQBAiArH5taFYL0Lwntnhk79-AmcA23BvQsFUtc
