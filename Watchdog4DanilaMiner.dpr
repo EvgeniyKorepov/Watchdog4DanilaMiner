@@ -9,17 +9,19 @@ uses
   System.Generics.Collections,
   System.IOUtils,
   Winapi.Windows,
-  UnitHelper in 'UnitHelper.pas';
+  UnitHelper in 'UnitHelper.pas',
+  Unit1StatisticThread in 'Unit1StatisticThread.pas';
 
 var AWorkDir : String;
     AConfigFilePath : String;
 begin
   try
     FSettings.HashrateList := THashrateList.Create;
-    FSettings.HashFoundCount := 0;
+    FSettings.ShareCount := 0;
     FFormatSettings := TFormatSettings.Create;
     FQuele := TThreadedQueue<String>.Create(10, 100, 100);
-    FQueleBalance := TThreadedQueue<Double>.Create(10, 100, 100);;
+    FQueleBalance := TThreadedQueue<Double>.Create(10, 100, 10);
+    FStatisticThread := TStatisticThread.Create(FQueueStatistic);
     FBalance := 0;
     try
       SetConsoleCtrlHandler(@Handler, True);
@@ -46,5 +48,8 @@ begin
     FreeAndNil(FSettings.HashrateList);
     FreeAndNil(FQuele);
     FreeAndNil(FQueleBalance);
+    FStatisticThread.Terminate;
+    FStatisticThread.WaitFor;
+    FreeAndNil(FStatisticThread);
   end;
 end.
