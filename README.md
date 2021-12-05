@@ -10,7 +10,8 @@ Watchdog for Danila miner
 ## Новое:
 Теперь вы можете посмотреть статистику и состояние ваших ригов онлайн на странице https://korepov.com/ton/
 ![image](https://user-images.githubusercontent.com/35364901/144742810-14af620a-6046-44b1-a6ba-df29c761d885.png)
-
+Так же можно получать json данные для прикручивания к майнерским OS:
+https://korepov.com/ton/?wallet=EQAIxel94QQBAiArH5taFYL0Lwntnhk79-AmcA23BvQsFUtc&format=json
 
 ## Описание:
 
