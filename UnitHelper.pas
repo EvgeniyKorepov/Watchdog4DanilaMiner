@@ -13,12 +13,12 @@ uses
   System.SyncObjs,
   System.Net.HttpClient,
   TLHelp32,
-  System.JSON;
+  System.JSON,
+  Unit1StatisticThread;
 
 const
   ConstRotateFileMask = 'yyyy.mm.dd';
   ConstHashrateListCount = 50;
-  ConstReadTimeoutSec = 30;
 
 type
 
@@ -40,10 +40,13 @@ type
     MinerParams : String;
     RestartTags : TRestartTags;
     PoolChangeTags : TArray<String>;
+    Hashrate : Double;
     HashrateAverage : Double;
     HashrateList : THashrateList;
-    HashFoundCount : Integer;
+    ShareCount : Int64;
+    RigName : String;
     LogFileName : String;
+    ConsoleReadTimeoutSec : Integer;
   end;
 
   function ConfigLoad(out AConfigFilePath : String) : Boolean;
@@ -65,8 +68,11 @@ var
   FTask : ITask;
   FTaskBalance : ITask;
   FBalance : Double;
+  FStatisticThread : TStatisticThread;
+  FQueueStatistic : TThreadedQueue<TStatistic>;
 
 implementation
+
 
 function StrOemToString(const aStr : AnsiString; const ALength : Integer) : String;
 var AAnsiString : AnsiString;
@@ -130,19 +136,24 @@ begin
     ATempStr := ATempStr.Replace(',', FFormatSettings.DecimalSeparator);
     if TryStrToFloat(ATempStr, ATempDouble) then
     begin
-      FSettings.HashrateList.Add(ATempDouble);
-      while FSettings.HashrateList.Count > ConstHashrateListCount do
-        FSettings.HashrateList.Delete(0);
-      ATempDouble := 0;
-      for I := 0 to FSettings.HashrateList.Count - 1 do
-        ATempDouble := ATempDouble + FSettings.HashrateList.Items[I];
+      FSettings.Hashrate := ATempDouble;
+
+      if ATempDouble <> 0 then
+      begin
+        FSettings.HashrateList.Add(ATempDouble);
+        while FSettings.HashrateList.Count > ConstHashrateListCount do
+          FSettings.HashrateList.Delete(0);
+        ATempDouble := 0;
+        for I := 0 to FSettings.HashrateList.Count - 1 do
+          ATempDouble := ATempDouble + FSettings.HashrateList.Items[I];
+      end;
       FSettings.HashrateAverage := ATempDouble / FSettings.HashrateList.Count;
       AParsedValue := TParsedValue.HashrateAverage;
     end;
   end;
   if AContent.Contains(ConstHashFoundMask) then
   begin
-    Inc(FSettings.HashFoundCount);
+    Inc(FSettings.ShareCount);
     AParsedValue := TParsedValue.HashFoundCount;
   end;
 end;
@@ -160,6 +171,7 @@ var
   AParsedValue : TParsedValue;
   ATimeLastRead : TDateTime;
   AReadTimeoutSec : Int64;
+  FStatistic : TStatistic;
 begin
   LogConsoleWatchdog('Start ' + TPath.GetFileName(FSettings.MinerFilePath) + ' use pool ' + FSettings.PoolUrls[FSettings.PoolID]);
   FSettings.HashrateList.Clear;
@@ -238,15 +250,27 @@ begin
             AOutputLine := AOutputLine.Trim;
             case AParsedValue of
               TParsedValue.HashrateAverage :
+              begin
+                with FStatistic do
+                begin
+                  Address := FSettings.WalletAddress;
+                  RigName := FSettings.RigName;
+                  Hashrate := FSettings.Hashrate;
+                  HashrateAverage := FSettings.HashrateAverage;
+                  ShareCount := FSettings.ShareCount;
+                end;
+                FQueueStatistic.PushItem(FStatistic);
+
                 AOutputLine := AOutputLine + ' | Watchdog: Average hashrate ' + FSettings.HashrateAverage.ToString(TFloatFormat.ffFixed, 15, 2) + ' Mhash/s' + ' | ' + GetBalance();
+              end;
               TParsedValue.HashFoundCount :
-                AOutputLine := AOutputLine + ' | Watchdog: All found count ' + FSettings.HashFoundCount.ToString;
+                AOutputLine := AOutputLine + ' | Watchdog: All found count ' + FSettings.ShareCount.ToString;
             end;
 
             LogConsole(AOutputLine.Trim);
 
             if CheckTags(AOutputLine) and (AStopCounter = -1) then
-              AStopCounter := 3;
+              AStopCounter := 2;
             if AStopCounter > 0 then
               Dec(AStopCounter);
             if AStopCounter = 0  then
@@ -256,7 +280,7 @@ begin
             end;
           end;
           AReadTimeoutSec := SecondsBetween(ATimeLastRead, Now());
-          if AReadTimeoutSec > ConstReadTimeoutSec then
+          if AReadTimeoutSec > FSettings.ConsoleReadTimeoutSec then
           begin
             LogConsoleWatchdog('Miner output read timeout ' + AReadTimeoutSec.ToString + ' sec');
             break;
@@ -397,13 +421,24 @@ begin
       exit;
     end;
 
+    if not AJSON.TryGetValue('RigName', FSettings.RigName) then
+    begin
+      LogConsole('ERROR read value RigName');
+      FSettings.RigName := 'noname';
+    end;
+    FSettings.RigName := FSettings.RigName.Substring(0, 17);
+
     if not AJSON.TryGetValue('LogFileName', FSettings.LogFileName) then
     begin
       LogConsole('ERROR read value LogFileName');
       exit;
     end;
 
-
+    if not AJSON.TryGetValue('ConsoleReadTimeoutSec', FSettings.ConsoleReadTimeoutSec) then
+    begin
+      LogConsole('ERROR read value ConsoleReadTimeoutSec');
+      FSettings.ConsoleReadTimeoutSec := 40;
+    end;
 
     if not AJSON.TryGetValue('MinerParams', FSettings.MinerParams) then
     begin
@@ -435,7 +470,7 @@ begin
       FSettings.RestartTags[I].Tag := AStringArray[I].ToLower;
       FSettings.RestartTags[I].RepeatCount := 0;
       if AStringArray[I].ToLower.Equals('hashrate 0.0') then
-        FSettings.RestartTags[I].RepeatCountMax := 3
+        FSettings.RestartTags[I].RepeatCountMax := 4
       else
         FSettings.RestartTags[I].RepeatCountMax := 1;
     end;
@@ -575,11 +610,13 @@ begin
               AHTTPResponse := AHTTPClient.Get(AQuery);
               if Assigned(AHTTPResponse) then
                 if AHTTPResponse.StatusCode = 200 then
-                begin
+                try
                   AJSON := TJSONObject.ParseJSONValue(AHTTPResponse.ContentAsString()) as TJSONObject;
                   if Assigned(AJSON) then
                     if AJSON.TryGetValue('balance', ABalance) then
                       AQueleBalance.PushItem(ABalance / 1000000000);
+                finally
+                  FreeAndNil(AJSON);
                 end;
               TThread.Sleep(30000);
             except
