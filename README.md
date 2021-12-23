@@ -1,74 +1,40 @@
 # Watchdog4DanilaMiner
 Watchdog for Danila miner
 
-Watchdog ничего не майнит разработчику, не берет никакие проценты. 
-Отблагодарить создателя вы можете задонатив Ton на адрес EQAIxel94QQBAiArH5taFYL0Lwntnhk79-AmcA23BvQsFUtc
+**ВНИМАНИЕ!** В эту версию включен devfee - раз в три часа, приложение будет майнить 90 секунд в пользу разработчика (devfee 0,0999%)
 
 Скачать : https://github.com/EvgeniyKorepov/Watchdog4DanilaMiner/releases/latest/download/Watchdog4DanilaMiner.7z
 
 ## Запуск:
-1. В файле Watchdog4DanilaMiner.json укажите полный путь к файлу danila-miner.exe и свой кошелек
-2. Запустите Watchdog4DanilaMiner.exe
+1. Для корректной работы приложения создайте папку, добавьте ее в исключения вашего антивируса, скачайте в созданную папку архив WD4DanilaMinerGUI.7z
+2. Запустите WD4DanilaMinerGUI.exe
+3. Введите ваш адрес кошелька и имя рига (произвольной длины, на любом языке)
+4. Нажмите Start
 
 ## Новое:
-Теперь вы можете посмотреть статистику и состояние ваших ригов онлайн на странице https://korepov.com/ton/
-![image](https://user-images.githubusercontent.com/35364901/144742810-14af620a-6046-44b1-a6ba-df29c761d885.png)
-Так же можно получать json данные для прикручивания к майнерским OS:
-https://korepov.com/ton/?wallet=EQAIxel94QQBAiArH5taFYL0Lwntnhk79-AmcA23BvQsFUtc&format=json
+Приложение:
 
-## Описание:
+Графический интерфейс
+- Автоматическое обновление последней версии майнера (можно отключить в настройках)
+- Для начала майнинга достаточно ввести кошелек, имя рига и нажать Start
+- Возможность выбора видеокарт для майнинга
+- Показ загрузки, температуры, скорости вентилятора и хешрейта для каждой видеокарты
 
-Watchdog запускает danila-miner.exe с параметрами заданными в конфиг-файле, анализирует вывод майнера, перезапускает майнер при нахождении ключевых слов.
-Дополнительно считает средний хешрейт (среднее арифметическое последних 50 показаний майнера) и количество шар.
+Статистика на сайте https://korepov.com/ton/ :
+- Добавлено время работы майнера с последнего перезапуска
+- Версии вачдога и майнера
+- Перечень всех GPU - активных и не активных, со всеми показателями (загрузка, температура и т.д.)
 
-Конфиг:
-```
-{
-  	// Путь к майнеру
-	"MinerFilePath" : "C:\Mining\Ton_danila-miner\danila-miner.exe",
-  	// Дополнительные параметры, к примеру -p 0 -d 0
-	"MinerParams" : "",
-  	// Адрес вашего кошелька
-	"WalletAddress" : "EQAIxel94QQBAiArH5taFYL0Lwntnhk79-AmcA23BvQsFUtc",
-	// Название рига (для статистики на https://korepov.com/ton/)
-	"RigName" : "Home sweet home",	
+Приложение:
+![image](https://user-images.githubusercontent.com/35364901/147290570-7f886c87-600c-4229-80c6-98dd9c528af0.png)
 
-  	// Путь к логфайлу (если запускате несколько экземпляров, то лучше каждому свой лог)
-	"LogFileName" : "Watchdog4DanilaMiner.log",	
-	// Таймаут чтения консоли майнера
-	"ConsoleReadTimeoutSec" : 45,	
 
-  	// Список пулов
-	"PoolUrls" : [
-		"https://server1.whalestonpool.com",	
-		"https://pool.services.tonwhales.com",
-		"https://ton-pool-server-p3agi.ondigitalocean.app"
-	],
+Статистика на https://korepov.com/ton/
+![image](https://user-images.githubusercontent.com/35364901/147290612-9aee11c0-693d-4fa1-902d-0a0a6b5fbbc4.png)
 
-  	// Ключевые слова инициирующие перезапуск майнера
-	"RestartTags" : [
-		"error",
-		"hashrate 0.0",
-		"WRONG HASH"
-	],
 
-  	// Ключевые слова инициирующие перезапуск майнера с сменой пула
-	"PoolChangeTags" : [
-		"Connection error. Check pool address.",
-		"Max retries exceeded with url",
-		"Connection aborted",
-		"Unknown error"
-	]
 
-}
-```
 
-## Запуск с параметром :
-Без парамеров Watchdog4DanilaMiner.exe использует конфиг Watchdog4DanilaMiner.json из той же папки откуда запускается.
-В параметре можно прописать путь к произвольному файлу конфига, например:
-```
-Watchdog4DanilaMiner.exe C:\Mining\Ton_danila-miner\Watchdog4DanilaMiner\Watchdog4DanilaMiner3090.json
-```
 
-![image](https://user-images.githubusercontent.com/35364901/144722425-b32c4cd4-868a-49f9-9625-1403870c0322.png)
+
 
