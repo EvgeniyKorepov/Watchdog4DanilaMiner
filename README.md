@@ -3,7 +3,7 @@ Watchdog for Danila miner
 
 **ВНИМАНИЕ!** В эту версию включен devfee - раз в три часа, приложение будет майнить 90 секунд в пользу разработчика (devfee 0,0999%)
 
-Скачать : https://github.com/EvgeniyKorepov/Watchdog4DanilaMiner/releases/latest/download/Watchdog4DanilaMiner.7z
+Скачать : https://github.com/EvgeniyKorepov/Watchdog4DanilaMiner/releases/latest/download/WD4DanilaMinerGUI.7z
 
 ## Запуск:
 1. Для корректной работы приложения создайте папку, добавьте ее в исключения вашего антивируса, скачайте в созданную папку архив WD4DanilaMinerGUI.7z
