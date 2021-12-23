@@ -1,5 +1,5 @@
 # Watchdog4DanilaMiner
-Watchdog for Danila miner
+Watchdog for Danila miner (Windows)
 
 **ВНИМАНИЕ!** В эту версию включен devfee - раз в три часа, приложение будет майнить 90 секунд в пользу разработчика (devfee 0,0999%)
 
