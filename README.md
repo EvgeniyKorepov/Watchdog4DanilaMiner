@@ -7,6 +7,8 @@ Watchdog for Danila miner (Windows)
 
 Скачать : https://github.com/EvgeniyKorepov/Watchdog4DanilaMiner/releases/latest/download/WD4DanilaMinerGUI.7z
 
+Если у вас не показывает параметры видеокарт (загрузку, температуру и т.д), попробуйте заменить файлы atiadlxx.dll (для AMD) и nvml.dll (для NVidia) файлами из своей системы.
+
 ## Запуск:
 1. Для корректной работы приложения создайте папку, добавьте ее в исключения вашего антивируса, скачайте в созданную папку архив WD4DanilaMinerGUI.7z
 2. Запустите WD4DanilaMinerGUI.exe
