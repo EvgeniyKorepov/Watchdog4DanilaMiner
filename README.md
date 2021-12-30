@@ -5,7 +5,7 @@ Watchdog for Danila miner (Windows)
 
 **ВНИМАНИЕ!** В эту версию включен devfee - раз в три часа, приложение будет майнить 90 секунд в пользу разработчика (devfee 0,0999%)
 
-Скачать : https://github.com/EvgeniyKorepov/Watchdog4DanilaMiner/releases/latest/download/WD4DanilaMinerGUI.7z
+Скачать : https://github.com/EvgeniyKorepov/Watchdog4DanilaMiner/releases/latest/download/WD4DanilaMinerGUI.zip
 
 Если у вас не показывает параметры видеокарт (загрузку, температуру и т.д), попробуйте заменить файлы atiadlxx.dll (для AMD) и nvml.dll (для NVidia) файлами из своей системы.
 
