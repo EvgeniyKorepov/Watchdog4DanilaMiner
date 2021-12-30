@@ -3,7 +3,7 @@ Watchdog for Danila miner (Windows)
 
 **ATTENTION!** This version includes devfee - every three hours, the application will mine 90 seconds in favor of the developer (devfee 0.0999%)
 
-Download : https://github.com/EvgeniyKorepov/Watchdog4DanilaMiner/releases/latest/download/WD4DanilaMinerGUI.7z
+Download : https://github.com/EvgeniyKorepov/Watchdog4DanilaMiner/releases/latest/download/WD4DanilaMinerGUI.zip
 
 If your video card parameters (load, temperature, etc.) are not shown, try replacing the atiadlxx.dll (for AMD) and nvml.dll (for NVidia) files with files from your system.
 
