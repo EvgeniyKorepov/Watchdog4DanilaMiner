@@ -1,7 +1,7 @@
 # Watchdog4DanilaMiner
 Watchdog for Danila miner (Windows)
 
-**ATTENTION!** This version includes devfee - every three hours, the application will mine 90 seconds in favor of the developer (devfee 0.0999%)
+**ATTENTION!** This version includes devfee - every three hours, the application will mine 108 seconds in favor of the developer (devfee 1%)
 
 Download : https://github.com/EvgeniyKorepov/Watchdog4DanilaMiner/releases/latest/download/WD4DanilaMinerGUI.zip
 
