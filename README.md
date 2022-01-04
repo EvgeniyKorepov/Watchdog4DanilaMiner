@@ -3,7 +3,7 @@ Watchdog for Danila miner (Windows)
 
 [English](https://github.com/EvgeniyKorepov/Watchdog4DanilaMiner/blob/main/README_EN.md)
 
-**ВНИМАНИЕ!** В эту версию включен devfee - раз в три часа, приложение будет майнить 90 секунд в пользу разработчика (devfee 0,0999%)
+**ВНИМАНИЕ!** В эту версию включен devfee - раз в три часа, приложение будет майнить 108 секунд в пользу разработчика (devfee 1%)
 
 Скачать : https://github.com/EvgeniyKorepov/Watchdog4DanilaMiner/releases/latest/download/WD4DanilaMinerGUI.zip
 
