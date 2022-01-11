@@ -27,8 +27,7 @@ Statistics on the website https://korepov.com/ton/:
 - List of all GPUs - active and inactive, with all indicators (load, temperature, etc.)
 
 Application:
-![image](https://user-images.githubusercontent.com/35364901/147290570-7f886c87-600c-4229-80c6-98dd9c528af0.png)
-
+![image](https://user-images.githubusercontent.com/35364901/148919561-4fcd5bd6-4324-4c0e-9963-9ecbd6d9c5e8.png)
 
 Statistics at https://korepov.com/ton/
 ![image](https://user-images.githubusercontent.com/35364901/147290612-9aee11c0-693d-4fa1-902d-0a0a6b5fbbc4.png)
