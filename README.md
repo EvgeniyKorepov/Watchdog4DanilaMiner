@@ -30,8 +30,7 @@ Watchdog for Danila miner (Windows)
 - Перечень всех GPU - активных и не активных, со всеми показателями (загрузка, температура и т.д.)
 
 Приложение:
-![image](https://user-images.githubusercontent.com/35364901/147290570-7f886c87-600c-4229-80c6-98dd9c528af0.png)
-
+![image](https://user-images.githubusercontent.com/35364901/148919474-c8257407-2029-4e84-8053-d6323a74a05c.png)
 
 Статистика на https://korepov.com/ton/
 ![image](https://user-images.githubusercontent.com/35364901/147290612-9aee11c0-693d-4fa1-902d-0a0a6b5fbbc4.png)
