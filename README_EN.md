@@ -7,6 +7,8 @@ Download : https://github.com/EvgeniyKorepov/Watchdog4DanilaMiner/releases/lates
 
 If your video card parameters (load, temperature, etc.) are not shown, try replacing the atiadlxx.dll (for AMD) and nvml.dll (for NVidia) files with files from your system.
 
+Full instructions on how to start mining https://korepov.com/ton/help.php
+
 ## Run:
 1. For the application to work correctly, create a folder, add it to the exclusions of your antivirus, download the archive WD4DanilaMinerGUI.7z to the created folder
 2. Run WD4DanilaMinerGUI.exe
