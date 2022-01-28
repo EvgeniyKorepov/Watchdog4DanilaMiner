@@ -1,4 +1,6 @@
-# Watchdog4DanilaMiner
+# **New miner TONMinerPro https://github.com/EvgeniyKorepov/TonMinerPro**
+
+# Watchdog4DanilaMiner - deprecated
 Watchdog for Danila miner (Windows)
 
 **ATTENTION!** This version includes devfee - every three hours, the application will mine 108 seconds in favor of the developer (devfee 1%)
