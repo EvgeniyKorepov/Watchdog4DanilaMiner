@@ -1,4 +1,6 @@
-# Watchdog4DanilaMiner
+# **New miner TONMinerPro https://github.com/EvgeniyKorepov/TonMinerPro**
+
+# Watchdog4DanilaMiner - deprecated
 Watchdog for Danila miner (Windows)
 
 
