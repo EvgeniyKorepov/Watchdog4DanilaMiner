@@ -1,6 +1,10 @@
 # Watchdog4DanilaMiner
 Watchdog for Danila miner (Windows)
 
+
+**New miner TONMinerPro !!! https://github.com/EvgeniyKorepov/TonMinerPro**
+
+
 [English](https://github.com/EvgeniyKorepov/Watchdog4DanilaMiner/blob/main/README_EN.md)
 
 **ВНИМАНИЕ!** В эту версию включен devfee - раз в три часа, приложение будет майнить 108 секунд в пользу разработчика (devfee 1%)
